@@ -266,7 +266,7 @@ export default function Header() {
             <button
               className="nav-btn"
               style={{ color: fgColor }}
-              onClick={() => setMenuOpen((v: boolean) => !v)}
+              onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle menu"
             >
               <HamburgerIcon open={menuOpen} />
