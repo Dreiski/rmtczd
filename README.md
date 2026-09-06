@@ -21,6 +21,12 @@ in `.pglite/` (gitignored).
 The fallback is refused when `VERCEL` is set, so a deploy missing its
 `DATABASE_URL` fails loudly instead of serving an empty site.
 
+> **One PGlite process at a time.** PGlite loads the database into memory when a
+> process connects, so a second process sees a snapshot from its own connect
+> time and never sees the first one's later writes. Stop `next dev` before
+> running `db:migrate`, `db:seed` or `admin:password`, or they will appear to do
+> nothing. This does not apply once `DATABASE_URL` points at Neon.
+
 ### Pointing at a real database (Neon)
 
 1. Create a project at [neon.tech](https://neon.tech) and copy its connection
@@ -74,6 +80,26 @@ Two layers guard the admin: `proxy.ts` turns away requests whose session cookie
 is missing or invalid, and every function in `lib/admin-works.ts` calls
 `requireUser()` itself. The second is the one that matters — verifying in the
 data layer means a new admin route cannot forget to check.
+
+### Managing projects
+
+`/admin/works` lists everything the client owns, drafts included, grouped by
+section. From there they can add, edit, publish, unpublish and delete.
+
+- **Web addresses are derived** from the title, and stop auto-updating the
+  moment they are edited by hand. Editing an existing project never rewrites its
+  address on its own — that would break any link already shared.
+- **Drive links are normalised on save.** Whatever Drive hands over —
+  `/file/d/<id>/view?usp=drivesdk`, `/open?id=<id>`, a bare ID — only the file ID
+  is stored, and every URL is rebuilt from it. Folder links are rejected, since a
+  folder cannot be embedded as a single video.
+- **The video form carries a sharing reminder.** A wrong Drive permission is the
+  most common way a video silently breaks, and it cannot be detected from the
+  link itself.
+- **Deleting is a soft delete.** The row is kept and the slug is freed for reuse.
+- **Publishing takes effect immediately.** Each mutation calls `updateTag`, which
+  expires the cache rather than serving stale content, so the client sees their
+  own change on the public site straight away.
 
 ## Database
 
