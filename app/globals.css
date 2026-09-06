@@ -49,7 +49,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-eb-garamond), Georgia, serif;
-  transition: background-color 0.5s, color 0.5s;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 /* Shared chrome button styles, previously injected as an inline <style>

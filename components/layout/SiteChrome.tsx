@@ -6,7 +6,9 @@ import SplashScreen from "@/components/SplashScreen";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
-const SPLASH_MS = 3000;
+// Long enough to register the logo, short enough not to be a toll gate on
+// every navigation. Three seconds read as the site being broken.
+const SPLASH_MS = 1200;
 
 /**
  * Client boundary for the site chrome.

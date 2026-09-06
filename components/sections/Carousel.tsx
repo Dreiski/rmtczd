@@ -53,9 +53,12 @@ export default function Carousel({
 
   const item = items[current];
 
+  // Fills whatever the layout leaves rather than a whole viewport: h-screen sat
+  // below a sticky header and above a footer, so the home page was always taller
+  // than the screen and scrolled for no reason.
   return (
-    <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden">
-      <div className="relative mx-auto flex h-full w-full max-w-5xl items-center justify-center px-5">
+    <div className="relative flex w-full flex-1 flex-col items-center justify-center overflow-hidden py-6">
+      <div className="relative mx-auto flex w-full max-w-5xl flex-1 items-center justify-center px-4 sm:px-12">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={current}
@@ -65,18 +68,18 @@ export default function Carousel({
             animate="center"
             exit="exit"
             transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
-              opacity: { duration: 0.4 },
+              x: { type: "spring", stiffness: 420, damping: 34 },
+              opacity: { duration: 0.2 },
             }}
             className="flex w-full items-center justify-center"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.05, duration: 0.25 }}
-              className="relative w-full max-w-2xl rounded-2xl border border-border bg-card px-8 py-8 text-center text-fg shadow-2xl transition-colors duration-300"
+              transition={{ duration: 0.18 }}
+              className="relative w-full max-w-2xl rounded-2xl border border-border bg-card px-5 py-6 text-center text-fg shadow-2xl transition-colors duration-200 sm:px-8 sm:py-7"
             >
-              <h2 className="mb-4 text-3xl font-light tracking-wide md:text-5xl">
+              <h2 className="mb-3 text-2xl font-light tracking-wide sm:text-3xl md:text-4xl">
                 {item.href ? (
                   <Link href={item.href} className="hover:opacity-60">
                     {item.label}
@@ -103,7 +106,7 @@ export default function Carousel({
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
           aria-label="Previous"
-          className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-surface p-2 text-fg md:left-6"
+          className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-surface p-2 text-fg sm:left-2"
         >
           ←
         </motion.button>
@@ -113,13 +116,13 @@ export default function Carousel({
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
           aria-label="Next"
-          className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-surface p-2 text-fg md:right-6"
+          className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-surface p-2 text-fg sm:right-2"
         >
           →
         </motion.button>
       </div>
 
-      <div className="absolute bottom-6 flex gap-3">
+      <div className="mt-5 flex gap-3">
         {items.map((entry, index) => (
           <button
             key={entry.id}

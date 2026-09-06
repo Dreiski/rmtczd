@@ -11,7 +11,7 @@ export default async function Home() {
   }));
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center overflow-hidden">
+    <main className="flex flex-1 flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
       <Carousel items={items} />
     </main>
   );
