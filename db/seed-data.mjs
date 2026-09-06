@@ -5,7 +5,12 @@
  * not application data and nothing outside scripts/seed.mjs reads it.
  */
 
-export const CATEGORIES = ["edits", "photographs", "pubs", "personal"];
+export const CATEGORIES = [
+  "photo-highlights",
+  "video-highlights",
+  "same-day-edits",
+  "studio-shoots",
+];
 
 export const COLLECTIONS = [
   {

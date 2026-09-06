@@ -13,7 +13,7 @@ import {
   XIcon,
 } from "@/components/layout/icons";
 
-const EMAIL = "romanticized@gmail.com";
+const EMAIL = "rom.anticized29@gmail.com";
 
 export default function Header() {
   const { dark, setDark, menuOpen, setMenuOpen } = useApp();

@@ -42,9 +42,11 @@ for (const category of CATEGORIES) {
         collection.slug,
         collection.title,
         collection.description,
-        // "edits" is treated as the videographer section, so those works
-        // exercise the video card path. Confirm before this reaches the client.
-        category === "edits" ? "video" : "photo",
+        // The two video sections seed as video works so the play-glyph path is
+        // exercised; a Drive link is added per work in the admin.
+        category === "video-highlights" || category === "same-day-edits"
+          ? "video"
+          : "photo",
         2026,
         category,
         index,

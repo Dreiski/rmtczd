@@ -29,7 +29,7 @@ export default function WorkForm({ work }: { work?: Work }) {
     title: work?.title ?? "",
     description: work?.description ?? "",
     slug: work?.slug ?? "",
-    category: work?.category ?? "photographs",
+    category: work?.category ?? "photo-highlights",
     kind: work?.kind ?? "photo",
     year: work?.year ? String(work.year) : "",
     driveUrl: work?.external_url ?? "",

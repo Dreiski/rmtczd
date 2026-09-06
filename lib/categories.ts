@@ -1,30 +1,42 @@
-export const CATEGORIES = ["edits", "photographs", "pubs", "personal"] as const;
+/**
+ * The four sections of the site.
+ *
+ * These strings are the URL segment (/photo-highlights/...) and the value in
+ * works.category, which is constrained in the database. Renaming one means a
+ * migration, not just an edit here — see db/migrations/004.
+ */
+export const CATEGORIES = [
+  "photo-highlights",
+  "video-highlights",
+  "same-day-edits",
+  "studio-shoots",
+] as const;
 
 export type Category = (typeof CATEGORIES)[number];
 
 interface CategoryMeta {
-  /** Heading shown on the category page. */
+  /** Heading shown on the category page, and the label in the menu. */
   title: string;
   /** Sub-heading under the title. */
   blurb: string;
 }
 
 export const CATEGORY_META: Record<Category, CategoryMeta> = {
-  edits: {
-    title: "Edits",
-    blurb: "Moving-image work, cut and graded",
+  "photo-highlights": {
+    title: "Photo Highlights",
+    blurb: "Selected photographs from recent work",
   },
-  photographs: {
-    title: "Photographs",
-    blurb: "Curated collections of refined and enhanced photographs",
+  "video-highlights": {
+    title: "Video Highlights",
+    blurb: "Films cut from the day's best moments",
   },
-  pubs: {
-    title: "Pubs",
-    blurb: "Selected published and commissioned work",
+  "same-day-edits": {
+    title: "Same Day Edits",
+    blurb: "Shot, cut and screened before the night is over",
   },
-  personal: {
-    title: "Personal Projects",
-    blurb: "Ongoing work made for its own sake",
+  "studio-shoots": {
+    title: "Studio Shoots",
+    blurb: "Portraits and sessions made in the studio",
   },
 };
 
