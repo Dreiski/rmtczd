@@ -73,26 +73,39 @@ interface R2Config {
   publicBaseUrl: string;
 }
 
-function r2Config(): R2Config | null {
-  const {
-    R2_ACCOUNT_ID: accountId,
-    R2_ACCESS_KEY_ID: accessKeyId,
-    R2_SECRET_ACCESS_KEY: secretAccessKey,
-    R2_BUCKET: bucket,
-    R2_PUBLIC_BASE_URL: publicBaseUrl,
-  } = process.env;
+const R2_VARS = [
+  "R2_ACCOUNT_ID",
+  "R2_ACCESS_KEY_ID",
+  "R2_SECRET_ACCESS_KEY",
+  "R2_BUCKET",
+  "R2_PUBLIC_BASE_URL",
+] as const;
 
-  if (accountId && accessKeyId && secretAccessKey && bucket && publicBaseUrl) {
-    return {
-      accountId,
-      accessKeyId,
-      secretAccessKey,
-      bucket,
-      publicBaseUrl: publicBaseUrl.replace(/\/$/, ""),
-    };
+function r2Config(): R2Config | null {
+  const present = R2_VARS.filter((name) => Boolean(process.env[name]));
+
+  // All or nothing. Falling back to local storage because one variable is
+  // missing or misspelled looks like it works — uploads succeed, images render
+  // — right up until the deploy, where the filesystem is ephemeral and the
+  // images vanish. A half-configured bucket is a mistake, so say so.
+  if (present.length > 0 && present.length < R2_VARS.length) {
+    const missing = R2_VARS.filter((name) => !process.env[name]);
+    throw new Error(
+      `R2 is partly configured: ${missing.join(", ")} ${
+        missing.length === 1 ? "is" : "are"
+      } missing. Set all of ${R2_VARS.join(", ")}, or none of them to use local storage.`
+    );
   }
 
-  return null;
+  if (present.length === 0) return null;
+
+  return {
+    accountId: process.env.R2_ACCOUNT_ID!,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+    bucket: process.env.R2_BUCKET!,
+    publicBaseUrl: process.env.R2_PUBLIC_BASE_URL!.replace(/\/$/, ""),
+  };
 }
 
 export function isUsingR2(): boolean {
