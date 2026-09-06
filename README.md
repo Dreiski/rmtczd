@@ -96,6 +96,10 @@ section. From there they can add, edit, publish, unpublish and delete.
 - **The video form carries a sharing reminder.** A wrong Drive permission is the
   most common way a video silently breaks, and it cannot be detected from the
   link itself.
+- **Order is dragged, not numbered.** Projects within a section, and images
+  within a project, are reordered by dragging the handle; the order saves on
+  drop. Arrow buttons do the same thing from the keyboard, since drag-and-drop
+  is not keyboard-reachable.
 - **Deleting is a soft delete.** The row is kept and the slug is freed for reuse.
 - **Publishing takes effect immediately.** Each mutation calls `updateTag`, which
   expires the cache rather than serving stale content, so the client sees their
@@ -157,6 +161,15 @@ public bucket would then serve as a live document.
 
 The first image uploaded becomes the work's cover. Removing the cover promotes
 the next image rather than leaving the card blank.
+
+### Video
+
+A work of kind `video` stores a Google Drive file ID and plays in a modal on the
+site rather than sending the visitor to Drive. The modal keeps an "Open in
+Drive" link, because a changed sharing permission breaks the embed silently and
+there is no cross-origin way to detect it. The iframe mounts only when the modal
+opens, so Drive is not contacted on page load. The cover image doubles as the
+poster frame.
 
 ## Database
 

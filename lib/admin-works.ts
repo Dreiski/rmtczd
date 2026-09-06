@@ -119,7 +119,7 @@ export async function getWorkById(id: string): Promise<Work | null> {
 export async function createWork(input: WorkInput): Promise<string> {
   await requireUser();
 
-  // New work goes to the end of its section; step 5 makes the order draggable.
+  // New work goes to the end of its section; the client drags it into place.
   const [{ next }] = await query<{ next: number }>(
     `select coalesce(max(sort_order) + 1, 0) as next
        from works where category = $1 and deleted_at is null`,
@@ -218,5 +218,43 @@ export async function softDeleteWork(id: string): Promise<void> {
   await query(
     "update works set deleted_at = now(), updated_at = now() where id = $1",
     [id]
+  );
+}
+
+/**
+ * Persists a curated order for one section.
+ *
+ * Takes the full ordered list of ids rather than a moved-item delta: the client
+ * drags things around freely, and rewriting every position is both simpler and
+ * immune to the gaps and ties that incremental updates accumulate.
+ *
+ * Ids not in the given category are ignored rather than trusted, so a tampered
+ * payload cannot reshuffle another section.
+ */
+export async function reorderWorks(
+  category: Category,
+  orderedIds: string[]
+): Promise<void> {
+  await requireUser();
+
+  if (orderedIds.length === 0) return;
+
+  const valid = orderedIds.filter((id) => /^[0-9a-f-]{36}$/i.test(id));
+  if (valid.length === 0) return;
+
+  // One statement: a partial failure would leave the gallery in an order the
+  // client never chose.
+  await query(
+    `update works as w
+        set sort_order = new_order.position,
+            updated_at = now()
+       from (
+         select id, ordinality - 1 as position
+           from unnest($2::uuid[]) with ordinality as t(id, ordinality)
+       ) as new_order
+      where w.id = new_order.id
+        and w.category = $1
+        and w.deleted_at is null`,
+    [category, valid]
   );
 }

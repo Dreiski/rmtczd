@@ -1,56 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { listAllWorks } from "@/lib/admin-works";
-import { togglePublished } from "@/lib/admin-actions";
 import { CATEGORIES, CATEGORY_META } from "@/lib/categories";
-import type { Work } from "@/lib/types";
+import ReorderableWorkList from "@/components/admin/ReorderableWorkList";
 
 export const metadata = { title: "Projects" };
-
-function WorkRow({ work }: { work: Work }) {
-  const published = work.published_at !== null;
-
-  return (
-    <li className="flex items-center justify-between gap-4 px-5 py-4">
-      <div className="min-w-0">
-        <Link
-          href={`/admin/works/${work.id}`}
-          className="block truncate tracking-wide hover:opacity-60"
-        >
-          {work.title}
-        </Link>
-        <p className="mt-1 truncate text-xs text-subtle">
-          /{work.category}/{work.slug}
-          {work.kind === "video" && " · video"}
-          {work.kind === "video" && !work.external_url && (
-            <span className="text-accent"> · no Drive link</span>
-          )}
-        </p>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-4">
-        <span
-          className={`text-xs uppercase tracking-widest ${
-            published ? "text-subtle" : "text-accent"
-          }`}
-        >
-          {published ? "Live" : "Draft"}
-        </span>
-
-        <form action={togglePublished}>
-          <input type="hidden" name="id" value={work.id} />
-          <input type="hidden" name="published" value={published ? "false" : "true"} />
-          <button
-            type="submit"
-            className="rounded-md border border-border px-3 py-1 text-xs uppercase tracking-widest hover:opacity-60"
-          >
-            {published ? "Unpublish" : "Publish"}
-          </button>
-        </form>
-      </div>
-    </li>
-  );
-}
 
 async function WorkList() {
   const works = await listAllWorks();
@@ -74,11 +28,7 @@ async function WorkList() {
             <h2 className="mb-3 text-xs uppercase tracking-widest text-subtle">
               {CATEGORY_META[category].title}
             </h2>
-            <ul className="divide-y divide-border rounded-lg border border-border">
-              {inSection.map((work) => (
-                <WorkRow key={work.id} work={work} />
-              ))}
-            </ul>
+            <ReorderableWorkList category={category} works={inSection} />
           </section>
         );
       })}
@@ -98,6 +48,11 @@ export default function WorksPage() {
           Add project
         </Link>
       </div>
+
+      <p className="-mt-4 text-sm text-subtle">
+        Drag a project by its handle to change where it appears on the site, or
+        use the arrows. The order is saved as soon as you drop it.
+      </p>
 
       <Suspense fallback={<p className="text-sm text-subtle">Loading…</p>}>
         <WorkList />

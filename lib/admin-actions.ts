@@ -8,12 +8,14 @@ import { isValidSlug, slugify } from "./slug";
 import {
   createWork,
   getWorkById,
+  reorderWorks,
   setPublished,
   softDeleteWork,
   updateWork,
   SlugTakenError,
   type WorkInput,
 } from "./admin-works";
+import { reorderAssets } from "./admin-assets";
 
 /**
  * Mutations for the admin.
@@ -168,4 +170,27 @@ export async function deleteWork(formData: FormData): Promise<void> {
   await softDeleteWork(id);
   updateTag("works");
   redirect("/admin/works");
+}
+
+/** Persists a dragged order for one section. Called from the admin list. */
+export async function saveWorkOrder(
+  category: string,
+  orderedIds: string[]
+): Promise<void> {
+  if (!isCategory(category)) return;
+
+  await reorderWorks(category, orderedIds);
+  updateTag("works");
+}
+
+/** Persists a dragged order for one work's images. */
+export async function saveAssetOrder(
+  workId: string,
+  orderedIds: string[]
+): Promise<void> {
+  const work = await getWorkById(workId);
+  if (!work) return;
+
+  await reorderAssets(work.id, orderedIds);
+  updateTag("works");
 }

@@ -116,3 +116,26 @@ export async function updateAssetAlt(
     alt,
   ]);
 }
+
+/** Persists a curated order for one work's images. See reorderWorks. */
+export async function reorderAssets(
+  workId: string,
+  orderedIds: string[]
+): Promise<void> {
+  await requireUser();
+
+  const valid = orderedIds.filter((id) => /^[0-9a-f-]{36}$/i.test(id));
+  if (valid.length === 0) return;
+
+  await query(
+    `update assets as a
+        set sort_order = new_order.position
+       from (
+         select id, ordinality - 1 as position
+           from unnest($2::uuid[]) with ordinality as t(id, ordinality)
+       ) as new_order
+      where a.id = new_order.id
+        and a.work_id = $1`,
+    [workId, valid]
+  );
+}
