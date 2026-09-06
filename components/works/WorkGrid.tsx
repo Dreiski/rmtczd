@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import type { Work } from "@/lib/types";
+import type { WorkListItem } from "@/lib/works";
 
 /**
- * Placeholder card backgrounds, used until a work has a real cover asset
- * (step 4 of the build order). Indexed by sort_order so the ordering the client
- * curates is what drives the colour, and so it stays stable across renders.
+ * Fallback card background for a work with no cover image yet. Indexed by
+ * sort_order so the ordering the client curates drives the colour and it stays
+ * stable across renders.
  */
 const PLACEHOLDER_COLORS = [
   "#2a2a2a",
@@ -50,7 +51,7 @@ function PlayGlyph() {
   );
 }
 
-export default function WorkGrid({ works }: { works: Work[] }) {
+export default function WorkGrid({ works }: { works: WorkListItem[] }) {
   if (works.length === 0) {
     return (
       <p className="text-sm tracking-widest uppercase text-subtle">
@@ -71,11 +72,28 @@ export default function WorkGrid({ works }: { works: Work[] }) {
           <Link
             href={`/${work.category}/${work.slug}`}
             className="group relative block h-64 overflow-hidden rounded-lg transition-shadow duration-300 hover:shadow-lg dark:hover:shadow-xl"
-            style={{
-              backgroundColor:
-                PLACEHOLDER_COLORS[work.sort_order % PLACEHOLDER_COLORS.length],
-            }}
+            style={
+              work.cover
+                ? undefined
+                : {
+                    backgroundColor:
+                      PLACEHOLDER_COLORS[
+                        work.sort_order % PLACEHOLDER_COLORS.length
+                      ],
+                  }
+            }
           >
+            {work.cover && (
+              <Image
+                src={work.cover.url}
+                alt=""
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+            )}
+
+            {/* Keeps the title legible over any photograph. */}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-75" />
 
             {/* §2: the video card gets a play glyph so nobody clicks expecting

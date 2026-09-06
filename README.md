@@ -101,6 +101,29 @@ section. From there they can add, edit, publish, unpublish and delete.
   expires the cache rather than serving stale content, so the client sees their
   own change on the public site straight away.
 
+### Images
+
+Uploads go straight from the browser to object storage, never through a route
+handler — Vercel caps serverless request bodies at about 4.5MB, which would
+break the "add fifty images at once" case the admin exists for. Each file takes
+three steps: ask `/api/admin/uploads/sign` for a short-lived URL, `PUT` the
+bytes to it, then confirm, which records the row.
+
+Nothing about the destination is client-controlled. Storage keys are built
+server-side as `works/<work id>/<uuid>.<ext>`, so a filename cannot influence
+where an object lands, and the confirm step re-checks that the key belongs to
+the work being edited and that the object actually exists.
+
+With no R2 credentials set, files are written to `.uploads/` and served from
+`/api/media/...` — development only, and both routes disable themselves as soon
+as R2 is configured. To use R2, set all five `R2_*` variables from
+`.env.example`. `R2_PUBLIC_BASE_URL` also feeds `images.remotePatterns` in
+[next.config.ts](next.config.ts); `next/image` refuses to optimise a host that
+is not listed there.
+
+The first image uploaded becomes the work's cover. Removing the cover promotes
+the next image rather than leaving the card blank.
+
 ## Database
 
 | Command | Effect |

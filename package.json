@@ -13,6 +13,8 @@
     "admin:password": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/set-admin-password.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/s3-request-presigner": "^3.1127.0",
     "@neondatabase/serverless": "^1.1.0",
     "framer-motion": "^12.38.0",
     "jose": "^6.2.12",

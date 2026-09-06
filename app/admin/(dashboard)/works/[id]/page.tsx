@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import WorkForm from "@/components/admin/WorkForm";
+import AssetManager from "@/components/admin/AssetManager";
 import { getWorkById } from "@/lib/admin-works";
 import { deleteWork } from "@/lib/admin-actions";
 
@@ -29,6 +30,8 @@ async function EditForm({ params }: { params: Params }) {
       </div>
 
       <WorkForm work={work} />
+
+      <AssetManager work={work} />
 
       <div className="border-t border-border pt-6">
         <form action={deleteWork}>

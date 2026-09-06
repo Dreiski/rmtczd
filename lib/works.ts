@@ -1,8 +1,58 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { query } from "./db";
+import { publicUrlFor } from "./storage";
 import type { Category } from "./categories";
 import type { Asset, Work, WorkWithAssets } from "./types";
+
+/** A work plus its resolved cover image, as rendered on a gallery card. */
+export interface WorkListItem extends Work {
+  cover: { url: string; width: number; height: number; alt: string } | null;
+}
+
+interface CoverRow extends Work {
+  cover_storage_key: string | null;
+  cover_width: number | null;
+  cover_height: number | null;
+  cover_alt: string | null;
+}
+
+/**
+ * Storage keys are an implementation detail, so URLs are resolved here rather
+ * than in the client components that render the cards.
+ */
+function withCover(row: CoverRow): WorkListItem {
+  const {
+    cover_storage_key,
+    cover_width,
+    cover_height,
+    cover_alt,
+    ...work
+  } = row;
+
+  return {
+    ...work,
+    cover: cover_storage_key
+      ? {
+          url: publicUrlFor(cover_storage_key),
+          width: cover_width ?? 1600,
+          height: cover_height ?? 1067,
+          alt: cover_alt ?? work.title,
+        }
+      : null,
+  };
+}
+
+const COVER_JOIN = `
+  left join assets cover on cover.id = works.cover_asset_id
+`;
+
+const COVER_COLUMNS = `
+  cover.storage_key as cover_storage_key,
+  cover.width       as cover_width,
+  cover.height      as cover_height,
+  cover.alt         as cover_alt
+`;
 
 /**
  * Read side of the public gallery.
@@ -20,28 +70,31 @@ import type { Asset, Work, WorkWithAssets } from "./types";
 const PUBLIC_WHERE = "published_at is not null and deleted_at is null";
 
 const WORK_COLUMNS = `
-  id, slug, title, description, kind, year, category,
-  cover_asset_id, external_url, sort_order, published_at, deleted_at
+  works.id, works.slug, works.title, works.description, works.kind, works.year,
+  works.category, works.cover_asset_id, works.external_url, works.sort_order,
+  works.published_at, works.deleted_at
 `;
 
-export async function listWorks(category: Category): Promise<Work[]> {
+export async function listWorks(category: Category): Promise<WorkListItem[]> {
   "use cache";
   cacheTag("works");
   cacheLife("max");
 
-  return query<Work>(
-    `select ${WORK_COLUMNS}
-       from works
-      where category = $1 and ${PUBLIC_WHERE}
-      order by sort_order, title`,
+  const rows = await query<CoverRow>(
+    `select ${WORK_COLUMNS}, ${COVER_COLUMNS}
+       from works ${COVER_JOIN}
+      where works.category = $1 and ${PUBLIC_WHERE}
+      order by works.sort_order, works.title`,
     [category]
   );
+
+  return rows.map(withCover);
 }
 
 export async function getWork(
   category: Category,
   slug: string
-): Promise<WorkWithAssets | null> {
+): Promise<(WorkWithAssets & { assets: (Asset & { url: string })[] }) | null> {
   "use cache";
   cacheTag("works");
   cacheLife("max");
@@ -49,7 +102,7 @@ export async function getWork(
   const [work] = await query<Work>(
     `select ${WORK_COLUMNS}
        from works
-      where category = $1 and slug = $2 and ${PUBLIC_WHERE}`,
+      where works.category = $1 and works.slug = $2 and ${PUBLIC_WHERE}`,
     [category, slug]
   );
 
@@ -63,7 +116,13 @@ export async function getWork(
     [work.id]
   );
 
-  return { ...work, assets };
+  return {
+    ...work,
+    assets: assets.map((asset) => ({
+      ...asset,
+      url: publicUrlFor(asset.storage_key),
+    })),
+  };
 }
 
 /** Drives generateStaticParams for /[category]/[slug]. */
@@ -75,22 +134,25 @@ export async function listPublishedWorkPaths(): Promise<
   cacheLife("max");
 
   return query<{ category: Category; slug: string }>(
-    `select category, slug from works where ${PUBLIC_WHERE} order by category, sort_order`
+    `select works.category, works.slug from works
+      where ${PUBLIC_WHERE} order by works.category, works.sort_order`
   );
 }
 
 /** Works surfaced on the home carousel, most curated first. */
-export async function listFeaturedWorks(limit = 7): Promise<Work[]> {
+export async function listFeaturedWorks(limit = 7): Promise<WorkListItem[]> {
   "use cache";
   cacheTag("works");
   cacheLife("max");
 
-  return query<Work>(
-    `select ${WORK_COLUMNS}
-       from works
+  const rows = await query<CoverRow>(
+    `select ${WORK_COLUMNS}, ${COVER_COLUMNS}
+       from works ${COVER_JOIN}
       where ${PUBLIC_WHERE}
-      order by sort_order, category
+      order by works.sort_order, works.category
       limit $1`,
     [limit]
   );
+
+  return rows.map(withCover);
 }
