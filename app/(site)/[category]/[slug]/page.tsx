@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { CATEGORY_META, isCategory } from "@/lib/categories";
+import { CATEGORIES, CATEGORY_META, isCategory } from "@/lib/categories";
 import { getWork, listPublishedWorkPaths } from "@/lib/works";
 import { driveEmbedUrl, driveViewUrl } from "@/lib/drive";
 import AssetGrid from "@/components/works/AssetGrid";
@@ -10,7 +10,16 @@ import VideoPlayer from "@/components/works/VideoPlayer";
 type Params = Promise<{ category: string; slug: string }>;
 
 export async function generateStaticParams() {
-  return listPublishedWorkPaths();
+  const paths = await listPublishedWorkPaths();
+  if (paths.length > 0) return paths;
+
+  // Cache Components refuses to build when generateStaticParams returns
+  // nothing, so an empty gallery would fail the deploy outright — which is
+  // exactly the state a client can reach by unpublishing their last project, or
+  // on a first deploy against an empty database. One unroutable param keeps the
+  // build valid; the page below resolves it to notFound() like any other slug
+  // with no work behind it.
+  return [{ category: CATEGORIES[0], slug: "__no-published-works__" }];
 }
 
 export async function generateMetadata({
