@@ -16,12 +16,35 @@ npm run dev
 
 No database setup is needed locally. With `DATABASE_URL` unset the app falls
 back to [PGlite](https://pglite.dev) — Postgres compiled to WASM — storing data
-in `.pglite/` (gitignored). To work against a real database instead, copy
-`.env.example` to `.env.local` and set `DATABASE_URL` to a Neon connection
-string; the migrate and seed scripts follow the same variable.
+in `.pglite/` (gitignored).
 
 The fallback is refused when `VERCEL` is set, so a deploy missing its
 `DATABASE_URL` fails loudly instead of serving an empty site.
+
+### Pointing at a real database (Neon)
+
+1. Create a project at [neon.tech](https://neon.tech) and copy its connection
+   string. Use the **pooled** one (its host contains `-pooler`).
+2. Put it in `.env.local`:
+
+   ```
+   DATABASE_URL=postgresql://USER:PASSWORD@HOST-pooler.REGION.aws.neon.tech/neondb?sslmode=require
+   ```
+
+3. Apply the schema and content to it:
+
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+`.env.local` is gitignored, and the `db:*` scripts load it the same way `next
+dev` does — so both the app and the CLIs always talk to the same database.
+Watch for `[db] DATABASE_URL not set` in the output: that means the variable
+did not reach the process and you are working against local PGlite.
+
+For deployment, set `DATABASE_URL` in the Vercel project's environment
+variables, then run `npm run db:migrate` once against that database.
 
 ## Database
 

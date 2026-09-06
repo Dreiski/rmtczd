@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "node scripts/migrate.mjs",
-    "db:seed": "node scripts/seed.mjs",
-    "db:reset": "node scripts/seed.mjs --reset"
+    "db:migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "db:seed": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/seed.mjs",
+    "db:reset": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/seed.mjs --reset"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
