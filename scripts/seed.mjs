@@ -34,11 +34,10 @@ for (const category of CATEGORIES) {
       continue;
     }
 
-    const [work] = await query(
+    await query(
       `insert into works
          (slug, title, description, kind, year, category, sort_order, published_at)
-       values ($1, $2, $3, $4, $5, $6, $7, now())
-       returning id`,
+       values ($1, $2, $3, $4, $5, $6, $7, now())`,
       [
         collection.slug,
         collection.title,
@@ -52,16 +51,9 @@ for (const category of CATEGORIES) {
       ]
     );
 
-    for (const [photoIndex, [title, caption]] of collection.photos.entries()) {
-      await query(
-        `insert into assets (work_id, storage_key, width, height, alt, sort_order)
-         values ($1, $2, $3, $4, $5, $6)`,
-        // storage_key is empty until step 4 wires up uploads; the grid renders a
-        // placeholder tile for assets that have no object behind them yet.
-        [work.id, "", 1600, 1067, `${title} — ${caption}`, photoIndex]
-      );
-    }
-
+    // No asset rows: an assets row describes a stored file, and there is no
+    // file to describe until someone uploads one. Seeding empty rows produced
+    // broken images on every work page (see migration 003).
     created += 1;
   }
 }
