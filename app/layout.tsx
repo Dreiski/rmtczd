@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, EB_Garamond } from "next/font/google";
 import { AppProvider } from "./AppContext";
-import SiteChrome from "@/components/layout/SiteChrome";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,6 +31,9 @@ export const metadata: Metadata = {
   description: "Photography and video work by Romuald Samson.",
 };
 
+// Deliberately thin: only the document shell and the theme provider. Chrome
+// belongs to the route groups, since the public site and the admin need
+// different ones.
 export default function RootLayout({
   children,
 }: {
@@ -43,9 +45,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AppProvider>
-          <SiteChrome>{children}</SiteChrome>
-        </AppProvider>
+        <AppProvider>{children}</AppProvider>
       </body>
     </html>
   );

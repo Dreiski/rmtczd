@@ -46,6 +46,35 @@ did not reach the process and you are working against local PGlite.
 For deployment, set `DATABASE_URL` in the Vercel project's environment
 variables, then run `npm run db:migrate` once against that database.
 
+## Admin
+
+The admin lives at `/admin`, behind a single account. There is one user and
+there will only ever be one — no sign-up, no roles, no user management.
+
+Create or rotate the account:
+
+```bash
+npm run admin:password -- you@example.com
+```
+
+It prompts for the password without echoing it, and can be re-run any time to
+change the password or the email. The hash lives in the database, so rotating it
+needs no redeploy.
+
+You also need a `SESSION_SECRET` in `.env.local` (at least 32 characters):
+
+```bash
+echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env.local
+```
+
+Passwords are hashed with scrypt from `node:crypto` — no native module to build.
+Sessions are a signed JWT in an httpOnly cookie; there is no session table.
+
+Two layers guard the admin: `proxy.ts` turns away requests whose session cookie
+is missing or invalid, and every function in `lib/admin-works.ts` calls
+`requireUser()` itself. The second is the one that matters — verifying in the
+data layer means a new admin route cannot forget to check.
+
 ## Database
 
 | Command | Effect |
@@ -53,6 +82,7 @@ variables, then run `npm run db:migrate` once against that database.
 | `npm run db:migrate` | Applies pending migrations. Idempotent. |
 | `npm run db:seed` | Adds placeholder works, skipping any that exist. Never overwrites. |
 | `npm run db:reset` | Wipes `works` and `assets`, then re-seeds. |
+| `npm run admin:password -- <email>` | Creates or updates the admin account. |
 
 Migrations are plain SQL in `db/migrations/`, applied in filename order and
 tracked in a `schema_migrations` table.
@@ -67,11 +97,15 @@ Two schema decisions worth knowing, both from the architecture notes:
 ## Layout
 
 ```
-app/[category]/            public gallery — one route serves all four sections
+app/(site)/[category]/     public gallery — one route serves all four sections
+app/admin/                 login page and the guarded dashboard
+proxy.ts                   optimistic auth redirect for /admin (was middleware.ts)
 lib/works.ts               every public read, cached under the `works` tag
+lib/admin-works.ts         admin reads: sees drafts, never cached, verifies first
+lib/auth/                  password hashing, session cookie, and the DAL
 lib/db.ts                  Postgres driver (Neon in production, PGlite locally)
 db/migrations/             plain SQL, applied in order
-scripts/                   migrate and seed CLIs
+scripts/                   migrate, seed, and admin-password CLIs
 ```
 
 Content is cached with `cacheLife('max')` and tagged `works`, so it is served
