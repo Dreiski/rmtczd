@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { CATEGORIES, CATEGORY_META } from "@/lib/categories";
-import { InstagramIcon, LinkedInIcon, XIcon } from "@/components/layout/icons";
+import SocialLinks from "@/components/layout/SocialLinks";
 
 /**
  * The site menu.
@@ -165,18 +165,7 @@ export default function MenuOverlay({
                 {email}
               </a>
 
-              {/* NOTE: unwired — these need real profile URLs. */}
-              <div className="flex items-center gap-5">
-                <button type="button" className="social-btn text-fg" aria-label="Instagram">
-                  <InstagramIcon />
-                </button>
-                <button type="button" className="social-btn text-fg" aria-label="LinkedIn">
-                  <LinkedInIcon />
-                </button>
-                <button type="button" className="social-btn text-fg" aria-label="X">
-                  <XIcon />
-                </button>
-              </div>
+              <SocialLinks />
 
               <span className="text-xs tracking-wide text-subtle">
                 © 2026 Romuald Samson.

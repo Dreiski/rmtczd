@@ -63,35 +63,6 @@ export function InstagramIcon() {
   );
 }
 
-export function LinkedInIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="2" y="2" width="20" height="20" rx="3" />
-      <line x1="8" y1="11" x2="8" y2="16" />
-      <line x1="8" y1="8" x2="8" y2="8.5" strokeWidth="2.2" />
-      <line x1="12" y1="16" x2="12" y2="11" />
-      <path d="M12 13.5a2.5 2.5 0 0 1 5 0V16" />
-    </svg>
-  );
-}
-
-export function XIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
-
 export function HamburgerIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -115,6 +86,25 @@ export function HamburgerIcon({ open }: { open: boolean }) {
           <line x1="3" y1="17" x2="21" y2="17" />
         </>
       )}
+    </svg>
+  );
+}
+
+export function FacebookIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M15.4 7.6H14a2 2 0 0 0-2 2V12h3.1l-.45 3H12v4.4" />
+      <line x1="9.3" y1="12" x2="12" y2="12" />
     </svg>
   );
 }
