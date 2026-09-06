@@ -1,12 +1,7 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
-import SplashScreen from "@/components/SplashScreen";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import type { Metadata } from "next";
+import { Geist, Geist_Mono, EB_Garamond } from "next/font/google";
 import { AppProvider } from "./AppContext";
-import { Geist, Geist_Mono } from "next/font/google";
+import SiteChrome from "@/components/layout/SiteChrome";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,32 +14,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-function LayoutContent({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(true);
+// Previously pulled at runtime by an @import inside an inline <style> tag in
+// the Header. Self-hosting it here removes a render-blocking request to
+// fonts.googleapis.com and lets the whole site use `font-serif`.
+const ebGaramond = EB_Garamond({
+  variable: "--font-eb-garamond",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  weight: ["400", "500"],
+});
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <>
-      <AnimatePresence>
-        {loading && <SplashScreen />}
-      </AnimatePresence>
-      {!loading && (
-        <>
-          <Header />
-          <div className="flex-1">{children}</div>
-          <Footer />
-        </>
-      )}
-    </>
-  );
-}
+export const metadata: Metadata = {
+  title: {
+    default: "Romanticized",
+    template: "%s — Romanticized",
+  },
+  description: "Photography and video work by Romuald Samson.",
+};
 
 export default function RootLayout({
   children,
@@ -54,11 +40,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <AppProvider>
-          <LayoutContent>{children}</LayoutContent>
+          <SiteChrome>{children}</SiteChrome>
         </AppProvider>
       </body>
     </html>

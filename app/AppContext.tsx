@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 interface AppContextType {
   menuOpen: boolean;
@@ -14,6 +14,13 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dark, setDark] = useState(false);
+
+  // The palette lives in CSS variables keyed off this class (see globals.css),
+  // so pages read their colors from CSS rather than from this context. That is
+  // what lets pages stay Server Components.
+  useEffect(() => {
+    document.body.classList.toggle("dark", dark);
+  }, [dark]);
 
   return (
     <AppContext.Provider value={{ menuOpen, setMenuOpen, dark, setDark }}>

@@ -1,26 +1,152 @@
 @import "tailwindcss";
 
+/* Theme is driven by a `.dark` class on <body>, set by AppProvider.
+   Using a class (not prefers-color-scheme) keeps the header's explicit
+   light/dark toggle authoritative. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #FFF9EF;
-  --foreground: #171717;
+  --bg: #f9f5ee;
+  --bg-chrome: #fff9ef;
+  --fg: #1a1410;
+  --subtle: #b0a898;
+  --surface: #e6dfd2;
+  --surface-hover: #d6cfbc;
+  --card: #ffffff;
+  --border: #e6dfd2;
+  --accent: #c0160c;
+}
+
+.dark {
+  --bg: #111111;
+  --bg-chrome: #111111;
+  --fg: #f0ebe0;
+  --subtle: #555555;
+  --surface: #2a2a2a;
+  --surface-hover: #3a3a3a;
+  --card: #1a1a1a;
+  --border: #2a2a2a;
+  --accent: #c0160c;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-bg-chrome: var(--bg-chrome);
+  --color-fg: var(--fg);
+  --color-subtle: var(--subtle);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-eb-garamond);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-eb-garamond), Georgia, serif;
+  transition: background-color 0.5s, color 0.5s;
+}
+
+/* Shared chrome button styles, previously injected as an inline <style>
+   tag from the Header on every client render. */
+.nav-btn {
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-btn:hover {
+  opacity: 0.45;
+}
+
+.social-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  line-height: 0;
+  padding: 2px;
+}
+.social-btn:hover {
+  opacity: 0.4;
+}
+
+.menu-item-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  transition: opacity 0.2s;
+  text-align: left;
+  width: 100%;
+}
+.menu-item-btn:hover {
+  opacity: 0.35;
+}
+
+.theme-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.theme-btn:hover {
+  opacity: 0.55;
+  transform: scale(1.05);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.sidebar-anim {
+  animation: slideIn 0.28s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.overlay-anim {
+  animation: fadeInOverlay 0.25s ease both;
+}
+
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none !important;
+  }
+  .show-mobile {
+    display: flex !important;
+  }
+}
+@media (min-width: 641px) {
+  .show-mobile {
+    display: none !important;
+  }
 }
