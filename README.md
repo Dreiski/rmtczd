@@ -131,6 +131,12 @@ as R2 is configured.
 3. **Give the bucket a public URL.** Bucket → Settings → Public access: either
    enable the `r2.dev` subdomain (fine to start) or connect a custom domain
    (better — `r2.dev` is rate-limited and not meant for production traffic).
+   This produces something like `https://pub-<id>.r2.dev`.
+
+   `R2_PUBLIC_BASE_URL` must be **that** URL. It is not the S3 endpoint:
+   `<account>.r2.cloudflarestorage.com` only answers signed requests, so images
+   addressed there 404 for every visitor while uploads keep succeeding. The app
+   refuses to start rather than let that combination ship.
 4. **Add the CORS policy below**, under Bucket → Settings → CORS policy. Without
    it the browser blocks every upload: the bytes go straight from the browser to
    R2, so R2 must allow that origin.

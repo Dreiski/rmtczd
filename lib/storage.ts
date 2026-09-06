@@ -99,12 +99,34 @@ function r2Config(): R2Config | null {
 
   if (present.length === 0) return null;
 
+  const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL!.replace(/\/$/, "");
+
+  let publicHost: string;
+  try {
+    publicHost = new URL(publicBaseUrl).hostname;
+  } catch {
+    throw new Error(
+      `R2_PUBLIC_BASE_URL is not a valid URL: ${publicBaseUrl}. Use the bucket's public r2.dev URL or a custom domain, e.g. https://pub-<id>.r2.dev`
+    );
+  }
+
+  // r2.cloudflarestorage.com is the S3 API endpoint. It only answers signed
+  // requests, so images addressed there would 404 for every visitor — and the
+  // upload half would keep working, making it look like a rendering bug.
+  if (publicHost.endsWith(".r2.cloudflarestorage.com")) {
+    throw new Error(
+      `R2_PUBLIC_BASE_URL points at the S3 API endpoint (${publicHost}), which is not publicly readable. ` +
+        "In the Cloudflare dashboard open the bucket, then Settings > Public access, and either enable the r2.dev subdomain " +
+        "(https://pub-<id>.r2.dev) or connect a custom domain. Use that URL here."
+    );
+  }
+
   return {
     accountId: process.env.R2_ACCOUNT_ID!,
     accessKeyId: process.env.R2_ACCESS_KEY_ID!,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
     bucket: process.env.R2_BUCKET!,
-    publicBaseUrl: process.env.R2_PUBLIC_BASE_URL!.replace(/\/$/, ""),
+    publicBaseUrl,
   };
 }
 
