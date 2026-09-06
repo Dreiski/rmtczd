@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Romanticized
 
-## Getting Started
+Portfolio site for a photographer/videographer, with a client-editable admin.
+Architecture notes and the build order live in [docs/architecture.md](docs/architecture.md).
 
-First, run the development server:
+Next.js 16 (App Router, Cache Components), React 19, Tailwind v4, Postgres.
+
+## Getting started
 
 ```bash
+npm install
+npm run db:migrate   # apply db/migrations/*.sql
+npm run db:seed      # load placeholder content
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No database setup is needed locally. With `DATABASE_URL` unset the app falls
+back to [PGlite](https://pglite.dev) — Postgres compiled to WASM — storing data
+in `.pglite/` (gitignored). To work against a real database instead, copy
+`.env.example` to `.env.local` and set `DATABASE_URL` to a Neon connection
+string; the migrate and seed scripts follow the same variable.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The fallback is refused when `VERCEL` is set, so a deploy missing its
+`DATABASE_URL` fails loudly instead of serving an empty site.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Database
 
-## Learn More
+| Command | Effect |
+| --- | --- |
+| `npm run db:migrate` | Applies pending migrations. Idempotent. |
+| `npm run db:seed` | Adds placeholder works, skipping any that exist. Never overwrites. |
+| `npm run db:reset` | Wipes `works` and `assets`, then re-seeds. |
 
-To learn more about Next.js, take a look at the following resources:
+Migrations are plain SQL in `db/migrations/`, applied in filename order and
+tracked in a `schema_migrations` table.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Two schema decisions worth knowing, both from the architecture notes:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **`published_at` gates public visibility.** Null means draft. Every public
+  read goes through `lib/works.ts`, which filters in SQL.
+- **`deleted_at` is a soft delete.** The unique index on `(category, slug)` is
+  partial, so deleting a work frees its slug for reuse.
 
-## Deploy on Vercel
+## Layout
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/[category]/            public gallery — one route serves all four sections
+lib/works.ts               every public read, cached under the `works` tag
+lib/db.ts                  Postgres driver (Neon in production, PGlite locally)
+db/migrations/             plain SQL, applied in order
+scripts/                   migrate and seed CLIs
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Content is cached with `cacheLife('max')` and tagged `works`, so it is served
+statically until an edit invalidates the tag rather than expiring on a timer.
