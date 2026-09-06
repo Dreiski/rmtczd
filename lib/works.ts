@@ -3,11 +3,21 @@ import { cacheLife, cacheTag } from "next/cache";
 import { query } from "./db";
 import { publicUrlFor } from "./storage";
 import type { Category } from "./categories";
-import type { Asset, Work, WorkWithAssets } from "./types";
+import type { Asset, Work } from "./types";
 
 /** A work plus its resolved cover image, as rendered on a gallery card. */
 export interface WorkListItem extends Work {
   cover: { url: string; width: number; height: number; alt: string } | null;
+}
+
+/** An asset with its public URL already resolved. */
+export interface PublicAsset extends Asset {
+  url: string;
+}
+
+/** A work and its ordered, URL-resolved images, as rendered on a detail page. */
+export interface WorkDetail extends Work {
+  assets: PublicAsset[];
 }
 
 interface CoverRow extends Work {
@@ -94,7 +104,7 @@ export async function listWorks(category: Category): Promise<WorkListItem[]> {
 export async function getWork(
   category: Category,
   slug: string
-): Promise<(WorkWithAssets & { assets: (Asset & { url: string })[] }) | null> {
+): Promise<WorkDetail | null> {
   "use cache";
   cacheTag("works");
   cacheLife("max");

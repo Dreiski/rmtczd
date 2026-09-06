@@ -97,8 +97,10 @@ export default function WorkGrid({ works }: { works: WorkListItem[] }) {
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-75" />
 
             {/* §2: the video card gets a play glyph so nobody clicks expecting
-                a lightbox. */}
-            {work.kind === "video" && <PlayGlyph />}
+                a lightbox. Only when there is a video to play — a glyph on a
+                work whose Drive link is missing promises something the detail
+                page cannot deliver. */}
+            {work.kind === "video" && work.external_url && <PlayGlyph />}
 
             <div className="absolute inset-0 flex flex-col justify-end p-6">
               <h2 className="mb-2 text-2xl font-light tracking-wide text-white">

@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CATEGORY_META, isCategory } from "@/lib/categories";
 import { getWork, listPublishedWorkPaths } from "@/lib/works";
+import { driveEmbedUrl, driveViewUrl } from "@/lib/drive";
 import AssetGrid from "@/components/works/AssetGrid";
+import VideoPlayer from "@/components/works/VideoPlayer";
 
 type Params = Promise<{ category: string; slug: string }>;
 
@@ -32,6 +34,14 @@ export default async function WorkPage({ params }: { params: Params }) {
   const work = await getWork(category, slug);
   if (!work) notFound();
 
+  // The cover doubles as the video's poster frame; fall back to the first
+  // snapshot so a video work is never fronted by an empty box.
+  const coverAsset =
+    work.assets.find((asset) => asset.id === work.cover_asset_id) ?? work.assets[0];
+  const poster = coverAsset
+    ? { url: coverAsset.url, alt: coverAsset.alt }
+    : null;
+
   return (
     <main className="flex flex-1 flex-col px-6 py-12 md:px-12">
       <div className="mb-8 flex items-center gap-4">
@@ -59,6 +69,19 @@ export default async function WorkPage({ params }: { params: Params }) {
           </p>
         </div>
       </div>
+
+      {/* §2: a video work plays on the site rather than bouncing the visitor
+          to Drive. Snapshots below it are the stills, not the video. */}
+      {work.kind === "video" && work.external_url && (
+        <div className="mb-10">
+          <VideoPlayer
+            title={work.title}
+            embedUrl={driveEmbedUrl(work.external_url)}
+            viewUrl={driveViewUrl(work.external_url)}
+            poster={poster}
+          />
+        </div>
+      )}
 
       <AssetGrid assets={work.assets} />
     </main>

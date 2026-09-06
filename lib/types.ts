@@ -41,8 +41,3 @@ export interface Asset {
   alt: string;
   sort_order: number;
 }
-
-/** A work plus its ordered assets, as rendered on a work detail page. */
-export interface WorkWithAssets extends Work {
-  assets: Asset[];
-}
