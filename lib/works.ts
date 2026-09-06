@@ -2,7 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { query } from "./db";
 import { publicUrlFor } from "./storage";
-import type { Category } from "./categories";
+import { CATEGORIES, type Category } from "./categories";
 import type { Asset, Work } from "./types";
 
 /** A work plus its resolved cover image, as rendered on a gallery card. */
@@ -149,20 +149,66 @@ export async function listPublishedWorkPaths(): Promise<
   );
 }
 
-/** Works surfaced on the home carousel, most curated first. */
-export async function listFeaturedWorks(limit = 7): Promise<WorkListItem[]> {
+/** One section as shown on the home page. */
+export interface CategoryPreview {
+  category: Category;
+  /** Published, non-deleted works in the section. */
+  count: number;
+  /** Cover of the first work that has one, used as the section's image. */
+  cover: { url: string; width: number; height: number; alt: string } | null;
+}
+
+/**
+ * The home page lists the sections rather than individual works, so it needs
+ * one representative image and a count per section.
+ *
+ * DISTINCT ON takes the first row per category under the ORDER BY, and ordering
+ * covered works first means a section with any image at all shows one, rather
+ * than showing nothing because its most curated work happens to lack a cover.
+ */
+export async function listCategoryPreviews(): Promise<CategoryPreview[]> {
   "use cache";
   cacheTag("works");
   cacheLife("max");
 
-  const rows = await query<CoverRow>(
-    `select ${WORK_COLUMNS}, ${COVER_COLUMNS}
+  const covers = await query<{
+    category: Category;
+    cover_storage_key: string | null;
+    cover_width: number | null;
+    cover_height: number | null;
+    cover_alt: string | null;
+  }>(
+    `select distinct on (works.category)
+            works.category, ${COVER_COLUMNS}
        from works ${COVER_JOIN}
       where ${PUBLIC_WHERE}
-      order by works.sort_order, works.category
-      limit $1`,
-    [limit]
+      order by works.category, (works.cover_asset_id is null), works.sort_order`
   );
 
-  return rows.map(withCover);
+  const counts = await query<{ category: Category; n: number }>(
+    `select category, count(*)::int as n
+       from works
+      where ${PUBLIC_WHERE}
+      group by category`
+  );
+
+  const coverByCategory = new Map(covers.map((row) => [row.category, row]));
+  const countByCategory = new Map(counts.map((row) => [row.category, Number(row.n)]));
+
+  return CATEGORIES.map((category) => {
+    const row = coverByCategory.get(category);
+
+    return {
+      category,
+      count: countByCategory.get(category) ?? 0,
+      cover: row?.cover_storage_key
+        ? {
+            url: publicUrlFor(row.cover_storage_key),
+            width: row.cover_width ?? 1600,
+            height: row.cover_height ?? 1067,
+            alt: row.cover_alt ?? "",
+          }
+        : null,
+    };
+  });
 }

@@ -1,18 +1,12 @@
-import Carousel from "@/components/sections/Carousel";
-import { listFeaturedWorks } from "@/lib/works";
+import CategoryGrid from "@/components/works/CategoryGrid";
+import { listCategoryPreviews } from "@/lib/works";
 
 export default async function Home() {
-  const works = await listFeaturedWorks();
-
-  const items = works.map((work) => ({
-    id: work.id,
-    label: work.title,
-    href: `/${work.category}/${work.slug}`,
-  }));
+  const previews = await listCategoryPreviews();
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
-      <Carousel items={items} />
+    <main className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-14">
+      <CategoryGrid previews={previews} />
     </main>
   );
 }
