@@ -139,7 +139,20 @@ as R2 is configured.
    refuses to start rather than let that combination ship.
 4. **Add the CORS policy below**, under Bucket → Settings → CORS policy. Without
    it the browser blocks every upload: the bytes go straight from the browser to
-   R2, so R2 must allow that origin.
+   R2, so R2 must allow that origin. **Every origin needs its own entry** — a
+   policy listing only `http://localhost:3000` blocks the deployed site.
+
+   To check what a bucket currently allows:
+
+   ```bash
+   curl -i -X OPTIONS \
+     -H "Origin: https://your-site.example" \
+     -H "Access-Control-Request-Method: PUT" \
+     https://<bucket>.<account>.r2.cloudflarestorage.com/probe
+   ```
+
+   `204` means allowed; `403 CORS not configured for this bucket` means that
+   origin is missing.
 
    ```json
    [

@@ -68,11 +68,20 @@ export default function ImageUploader({ workId }: { workId: string }) {
 
     const { uploadUrl, headers, storageKey } = await signed.json();
 
-    const put = await fetch(uploadUrl, {
-      method: "PUT",
-      headers,
-      body: file,
-    });
+    let put: Response;
+    try {
+      put = await fetch(uploadUrl, { method: "PUT", headers, body: file });
+    } catch {
+      // fetch only rejects for network-level failures. Against a bucket the
+      // overwhelmingly likely cause is a missing CORS rule: the browser blocks
+      // the request before it is sent, and the error carries no detail. Without
+      // this branch the row sat on "uploading…" forever.
+      update(index, {
+        status: "error",
+        error: "Could not reach storage — check the bucket's CORS settings.",
+      });
+      return;
+    }
 
     if (!put.ok) {
       update(index, { status: "error", error: `Upload failed (${put.status}).` });
@@ -112,12 +121,23 @@ export default function ImageUploader({ workId }: { workId: string }) {
     setBusy(true);
     setItems(files.map((file) => ({ name: file.name, status: "waiting" })));
 
-    for (const [index, file] of files.entries()) {
-      await uploadOne(file, index);
+    try {
+      for (const [index, file] of files.entries()) {
+        try {
+          await uploadOne(file, index);
+        } catch (error) {
+          // One bad file must not strand the rest of the queue.
+          update(index, {
+            status: "error",
+            error: error instanceof Error ? error.message : "Upload failed.",
+          });
+        }
+      }
+    } finally {
+      // Always releases the picker, even if something threw above.
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
-
-    setBusy(false);
-    if (inputRef.current) inputRef.current.value = "";
 
     // Pull the new assets into the list rendered by the server component.
     startTransition(() => router.refresh());
