@@ -109,6 +109,12 @@ async function s3Client(config: R2Config) {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
+    // Recent SDK versions add a CRC32 checksum to every PutObject by default.
+    // When presigning there is no body to checksum, so it signs the checksum of
+    // an empty payload — and the upload then fails validation against the real
+    // bytes. WHEN_REQUIRED leaves it out, which is what a presigned PUT needs.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
 }
 
@@ -136,8 +142,6 @@ export async function createPresignedUpload(options: {
 
   const client = await s3Client(config);
 
-  // ContentType and ContentLength are signed, so the browser cannot upload a
-  // different type or a larger file than the server authorised.
   const command = new PutObjectCommand({
     Bucket: config.bucket,
     Key: options.storageKey,
@@ -145,14 +149,20 @@ export async function createPresignedUpload(options: {
     ContentLength: options.contentLength,
   });
 
-  const uploadUrl = await getSignedUrl(client, command, { expiresIn: 300 });
+  const uploadUrl = await getSignedUrl(client, command, {
+    expiresIn: 300,
+    // content-length is signed by default; content-type is not, and without it
+    // the URL would accept a file of any type — including text/html, which a
+    // public bucket would then serve back as a live document.
+    signableHeaders: new Set(["content-type"]),
+  });
 
   return {
     uploadUrl,
-    headers: {
-      "Content-Type": options.contentType,
-      "Content-Length": String(options.contentLength),
-    },
+    // Content-Length is signed but deliberately not listed here: it is a
+    // forbidden header name, so fetch() silently drops any value we set. The
+    // browser sets it itself from the body, which is the value that was signed.
+    headers: { "Content-Type": options.contentType },
     storageKey: options.storageKey,
   };
 }

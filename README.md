@@ -116,10 +116,44 @@ the work being edited and that the object actually exists.
 
 With no R2 credentials set, files are written to `.uploads/` and served from
 `/api/media/...` — development only, and both routes disable themselves as soon
-as R2 is configured. To use R2, set all five `R2_*` variables from
-`.env.example`. `R2_PUBLIC_BASE_URL` also feeds `images.remotePatterns` in
-[next.config.ts](next.config.ts); `next/image` refuses to optimise a host that
-is not listed there.
+as R2 is configured.
+
+#### Setting up R2
+
+1. **Create a bucket.** Cloudflare dashboard → R2 → Create bucket.
+2. **Create an API token.** R2 → Manage API Tokens → Create, with *Object Read &
+   Write* on that bucket. This gives an Access Key ID and a Secret Access Key,
+   shown once.
+3. **Give the bucket a public URL.** Bucket → Settings → Public access: either
+   enable the `r2.dev` subdomain (fine to start) or connect a custom domain
+   (better — `r2.dev` is rate-limited and not meant for production traffic).
+4. **Add the CORS policy below**, under Bucket → Settings → CORS policy. Without
+   it the browser blocks every upload: the bytes go straight from the browser to
+   R2, so R2 must allow that origin.
+
+   ```json
+   [
+     {
+       "AllowedOrigins": ["http://localhost:3000", "https://your-site.example"],
+       "AllowedMethods": ["PUT"],
+       "AllowedHeaders": ["content-type"],
+       "MaxAgeSeconds": 3600
+     }
+   ]
+   ```
+
+5. **Set the five variables** from `.env.example`. `R2_ACCOUNT_ID` is in the
+   dashboard URL and on the R2 overview page; `R2_PUBLIC_BASE_URL` is the public
+   URL from step 3, with no trailing slash.
+
+`R2_PUBLIC_BASE_URL` also feeds `images.remotePatterns` in
+[next.config.ts](next.config.ts) — `next/image` refuses to optimise a host that
+is not listed there, so changing the bucket domain needs a redeploy, not just an
+env var edit.
+
+The presigned URL signs `content-length` and `content-type`, so an upload cannot
+exceed the size the server authorised or store something as `text/html` that the
+public bucket would then serve as a live document.
 
 The first image uploaded becomes the work's cover. Removing the cover promotes
 the next image rather than leaving the card blank.
