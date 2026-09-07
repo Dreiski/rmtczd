@@ -6,30 +6,39 @@ import { motion } from "framer-motion";
 /**
  * Full-bleed splash overlay.
  *
- * `object-cover` rather than `object-contain`: contain letterboxes the logo,
- * leaving bare strips down the sides on wide screens and above and below on
- * tall phones. Cover fills every viewport and crops instead, with the image
- * centred so the subject survives the crop. The black ground underneath means
- * any moment before the image paints is still full-bleed rather than white.
+ * LOGO.jpg is a 1500x1500 square on a solid #FFF9EF ground. Cropping that to a
+ * 16:9 screen with object-cover discards nearly half its height, which is what
+ * made it look zoomed in; on a tall phone it ate the sides instead.
  *
- * `100dvh` tracks mobile browser chrome as it collapses, which `100vh` does
- * not — on iOS Safari a `vh`-sized overlay leaves a gap once the toolbar hides.
- * `inset-0` on a fixed element already covers the viewport; the explicit height
- * is a belt-and-braces guard for browsers that resize the visual viewport
- * during the animation.
+ * object-contain shows the whole image at every aspect ratio, and painting the
+ * surround in the image's own background colour means the letterboxing is
+ * invisible — the overlay still covers the viewport edge to edge, it just is not
+ * all photograph. The colour is hardcoded rather than themed because it matches
+ * the file, not the site: in dark mode a dark surround would frame the cream
+ * square with a visible border.
+ *
+ * 100dvh tracks mobile browser chrome as it collapses, which 100vh does not —
+ * on iOS Safari a vh-sized overlay leaves a gap once the toolbar hides.
  */
+const IMAGE_BACKGROUND = "#FFF9EF";
+
 export default function SplashScreen() {
   return (
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.35 }}
-      className="fixed inset-0 z-50 overflow-hidden bg-black"
-      style={{ width: "100vw", height: "100dvh" }}
+      className="fixed inset-0 z-50 overflow-hidden"
+      style={{
+        width: "100vw",
+        height: "100dvh",
+        backgroundColor: IMAGE_BACKGROUND,
+      }}
       aria-hidden="true"
     >
       <motion.div
-        initial={{ scale: 1.1 }}
+        // Barely there: enough to feel alive, not enough to read as a zoom.
+        initial={{ scale: 1.03 }}
         animate={{ scale: 1 }}
         transition={{ duration: 1.2, ease: "easeOut" }}
         className="absolute inset-0"
@@ -40,7 +49,7 @@ export default function SplashScreen() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-contain object-center"
         />
       </motion.div>
     </motion.div>
