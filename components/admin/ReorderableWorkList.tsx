@@ -6,6 +6,7 @@ import { Reorder, useDragControls } from "framer-motion";
 import { saveWorkOrder, togglePublished } from "@/lib/admin-actions";
 import type { Work } from "@/lib/types";
 import DragHandle from "./DragHandle";
+import { Badge, button } from "./ui";
 
 /**
  * Drag-to-reorder for one section.
@@ -34,6 +35,7 @@ function WorkRow({
 }) {
   const controls = useDragControls();
   const published = work.published_at !== null;
+  const missingLink = work.kind === "video" && !work.external_url;
 
   return (
     <Reorder.Item
@@ -43,7 +45,9 @@ function WorkRow({
       // onReorder fires continuously while dragging; the write waits for the
       // drop so a single drag is one request, not one per crossed row.
       onDragEnd={onCommit}
-      className="flex items-center gap-3 bg-bg px-4 py-4"
+      // Wraps to two rows on a phone rather than crushing five controls into
+      // one line.
+      className="flex flex-wrap items-center gap-x-3 gap-y-3 bg-bg px-3 py-3 sm:flex-nowrap sm:px-4"
     >
       <DragHandle
         onPointerDown={(event) => controls.start(event)}
@@ -56,7 +60,7 @@ function WorkRow({
           onClick={() => onMove(index, index - 1)}
           disabled={index === 0}
           aria-label={`Move ${work.title} up`}
-          className="px-1 text-xs text-subtle hover:opacity-60 disabled:opacity-25"
+          className="px-1 text-xs leading-tight text-subtle hover:opacity-60 disabled:opacity-25"
         >
           ▲
         </button>
@@ -65,44 +69,35 @@ function WorkRow({
           onClick={() => onMove(index, index + 1)}
           disabled={index === total - 1}
           aria-label={`Move ${work.title} down`}
-          className="px-1 text-xs text-subtle hover:opacity-60 disabled:opacity-25"
+          className="px-1 text-xs leading-tight text-subtle hover:opacity-60 disabled:opacity-25"
         >
           ▼
         </button>
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 basis-40">
         <Link
           href={`/admin/works/${work.id}`}
-          className="block truncate tracking-wide hover:opacity-60"
+          className="block truncate font-medium tracking-wide hover:opacity-60"
         >
           {work.title}
         </Link>
-        <p className="mt-1 truncate text-xs text-subtle">
+        <p className="mt-0.5 truncate text-xs text-subtle">
           /{work.category}/{work.slug}
           {work.kind === "video" && " · video"}
-          {work.kind === "video" && !work.external_url && (
-            <span className="text-accent"> · no Drive link</span>
-          )}
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-4">
-        <span
-          className={`text-xs uppercase tracking-widest ${
-            published ? "text-subtle" : "text-accent"
-          }`}
-        >
+      <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+        {missingLink && <Badge tone="warning">No link</Badge>}
+        <Badge tone={published ? "live" : "draft"}>
           {published ? "Live" : "Draft"}
-        </span>
+        </Badge>
 
         <form action={togglePublished}>
           <input type="hidden" name="id" value={work.id} />
           <input type="hidden" name="published" value={published ? "false" : "true"} />
-          <button
-            type="submit"
-            className="rounded-md border border-border px-3 py-1 text-xs uppercase tracking-widest hover:opacity-60"
-          >
+          <button type="submit" className={button.secondary}>
             {published ? "Unpublish" : "Publish"}
           </button>
         </form>
@@ -178,11 +173,8 @@ export default function ReorderableWorkList({
         })}
       </Reorder.Group>
 
-      <p
-        aria-live="polite"
-        className="mt-2 h-4 text-right text-xs text-subtle"
-        // The drag itself is the feedback; this line only confirms the write.
-      >
+      {/* The drag itself is the feedback; this line only confirms the write. */}
+      <p aria-live="polite" className="mt-2 h-4 text-right text-xs text-subtle">
         {status === "saving" && "Saving order…"}
         {status === "saved" && "Order saved"}
       </p>

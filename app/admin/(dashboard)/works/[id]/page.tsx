@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import WorkForm from "@/components/admin/WorkForm";
 import AssetManager from "@/components/admin/AssetManager";
+import DeleteWorkButton from "@/components/admin/DeleteWorkButton";
 import { getWorkById } from "@/lib/admin-works";
-import { deleteWork } from "@/lib/admin-actions";
+import { CATEGORY_META } from "@/lib/categories";
+import { Badge, button } from "@/components/admin/ui";
 
 type Params = Promise<{ id: string }>;
 
@@ -15,16 +17,33 @@ async function EditForm({ params }: { params: Params }) {
   const work = await getWorkById(id);
   if (!work) notFound();
 
+  const published = work.published_at !== null;
+
   return (
     <>
-      <div className="flex items-baseline justify-between gap-4">
-        <h1 className="text-3xl font-light tracking-wide">{work.title}</h1>
-        {work.published_at && (
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="truncate text-2xl font-light tracking-wide sm:text-3xl">
+              {work.title}
+            </h1>
+            <Badge tone={published ? "live" : "draft"}>
+              {published ? "Live" : "Draft"}
+            </Badge>
+          </div>
+          <p className="mt-2 text-sm text-subtle">
+            {CATEGORY_META[work.category].title} · /{work.category}/{work.slug}
+          </p>
+        </div>
+
+        {published && (
           <Link
             href={`/${work.category}/${work.slug}`}
-            className="shrink-0 text-xs uppercase tracking-widest text-subtle hover:opacity-60"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${button.secondary} shrink-0`}
           >
-            View on site
+            View on site ↗
           </Link>
         )}
       </div>
@@ -33,36 +52,32 @@ async function EditForm({ params }: { params: Params }) {
 
       <AssetManager work={work} />
 
-      <div className="border-t border-border pt-6">
-        <form action={deleteWork}>
-          <input type="hidden" name="id" value={work.id} />
-          <button
-            type="submit"
-            className="text-xs uppercase tracking-widest text-accent hover:opacity-60"
-          >
-            Delete this project
-          </button>
-        </form>
-        <p className="mt-2 text-xs text-subtle">
-          Deleting hides it from the site. It is kept in the database, so it can
-          be brought back.
-        </p>
+      <div className="border-t border-border pt-8">
+        <DeleteWorkButton workId={work.id} title={work.title} />
       </div>
     </>
   );
 }
 
+function EditSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="h-9 w-64 animate-pulse rounded bg-surface" />
+      <div className="h-64 animate-pulse rounded-lg bg-surface" />
+    </div>
+  );
+}
+
 export default function EditWorkPage({ params }: { params: Params }) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-      <Link
-        href="/admin/works"
-        className="text-xs uppercase tracking-widest text-subtle hover:opacity-60"
-      >
-        ← Projects
-      </Link>
+    <div className="flex flex-col gap-8">
+      <div>
+        <Link href="/admin/works" className={button.quiet}>
+          ← Projects
+        </Link>
+      </div>
 
-      <Suspense fallback={<p className="text-sm text-subtle">Loading…</p>}>
+      <Suspense fallback={<EditSkeleton />}>
         <EditForm params={params} />
       </Suspense>
     </div>

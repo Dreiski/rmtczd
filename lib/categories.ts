@@ -10,6 +10,7 @@ export const CATEGORIES = [
   "video-highlights",
   "same-day-edits",
   "studio-shoots",
+  "films",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
@@ -37,6 +38,10 @@ export const CATEGORY_META: Record<Category, CategoryMeta> = {
   "studio-shoots": {
     title: "Studio Shoots",
     blurb: "Portraits and sessions made in the studio",
+  },
+  films: {
+    title: "Films",
+    blurb: "Longer pieces, told at their own pace",
   },
 };
 

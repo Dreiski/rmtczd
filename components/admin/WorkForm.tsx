@@ -6,12 +6,9 @@ import { saveWork, type WorkFormState } from "@/lib/admin-actions";
 import { CATEGORIES, CATEGORY_META } from "@/lib/categories";
 import { slugify } from "@/lib/slug";
 import type { Work } from "@/lib/types";
+import { button, field, label as labelText } from "./ui";
 
 const INITIAL: WorkFormState = {};
-
-const field =
-  "rounded-md border border-border bg-card px-3 py-2 text-fg outline-none focus:border-accent";
-const labelText = "text-xs uppercase tracking-widest text-subtle";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -177,17 +174,10 @@ export default function WorkForm({ work }: { work?: Work }) {
       )}
 
       <div className="flex items-center gap-4">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-fg px-4 py-2 text-sm uppercase tracking-widest text-bg transition-opacity hover:opacity-80 disabled:opacity-50"
-        >
-          {pending ? "Saving…" : "Save"}
+        <button type="submit" disabled={pending} className={button.primary}>
+          {pending ? "Saving…" : "Save project"}
         </button>
-        <Link
-          href="/admin/works"
-          className="text-xs uppercase tracking-widest text-subtle hover:opacity-60"
-        >
+        <Link href="/admin/works" className={button.quiet}>
           Cancel
         </Link>
       </div>

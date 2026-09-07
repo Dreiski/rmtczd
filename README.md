@@ -202,6 +202,11 @@ poster frame.
 Migrations are plain SQL in `db/migrations/`, applied in filename order and
 tracked in a `schema_migrations` table.
 
+Sections live in a CHECK constraint on `works.category`, and the value is also
+the URL segment. Adding one means a migration plus an entry in
+`lib/categories.ts` — see `db/migrations/005_add_films_category.sql` for the
+shape. Everything else on the site is driven off `CATEGORIES`.
+
 Two schema decisions worth knowing, both from the architecture notes:
 
 - **`published_at` gates public visibility.** Null means draft. Every public

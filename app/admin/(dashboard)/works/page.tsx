@@ -3,6 +3,7 @@ import Link from "next/link";
 import { listAllWorks } from "@/lib/admin-works";
 import { CATEGORIES, CATEGORY_META } from "@/lib/categories";
 import ReorderableWorkList from "@/components/admin/ReorderableWorkList";
+import { EmptyState, PageHeader, button } from "@/components/admin/ui";
 
 export const metadata = { title: "Projects" };
 
@@ -11,24 +12,44 @@ async function WorkList() {
 
   if (works.length === 0) {
     return (
-      <p className="text-sm text-subtle">
-        Nothing here yet. Add your first project.
-      </p>
+      <EmptyState
+        title="No projects yet"
+        description="Add your first project and it will appear here and on the site."
+        action={
+          <Link href="/admin/works/new" className={button.primary}>
+            Add project
+          </Link>
+        }
+      />
     );
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       {CATEGORIES.map((category) => {
         const inSection = works.filter((work) => work.category === category);
-        if (inSection.length === 0) return null;
+        const live = inSection.filter((w) => w.published_at !== null).length;
 
         return (
           <section key={category}>
-            <h2 className="mb-3 text-xs uppercase tracking-widest text-subtle">
-              {CATEGORY_META[category].title}
-            </h2>
-            <ReorderableWorkList category={category} works={inSection} />
+            <div className="mb-3 flex items-baseline justify-between gap-4">
+              <h2 className="text-sm font-medium tracking-wide">
+                {CATEGORY_META[category].title}
+              </h2>
+              <span className="text-xs text-subtle">
+                {inSection.length === 0
+                  ? "empty"
+                  : `${live} live · ${inSection.length - live} draft`}
+              </span>
+            </div>
+
+            {inSection.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-subtle">
+                Nothing in this section yet.
+              </p>
+            ) : (
+              <ReorderableWorkList category={category} works={inSection} />
+            )}
           </section>
         );
       })}
@@ -36,25 +57,30 @@ async function WorkList() {
   );
 }
 
+function ListSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="h-16 animate-pulse rounded-lg bg-surface" />
+      ))}
+    </div>
+  );
+}
+
 export default function WorksPage() {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-light tracking-wide">Projects</h1>
-        <Link
-          href="/admin/works/new"
-          className="rounded-md bg-fg px-4 py-2 text-sm uppercase tracking-widest text-bg transition-opacity hover:opacity-80"
-        >
-          Add project
-        </Link>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Projects"
+        description="Drag a project by its handle to change where it appears on the site, or use the arrows. The order saves as soon as you drop it."
+        action={
+          <Link href="/admin/works/new" className={button.primary}>
+            Add project
+          </Link>
+        }
+      />
 
-      <p className="-mt-4 text-sm text-subtle">
-        Drag a project by its handle to change where it appears on the site, or
-        use the arrows. The order is saved as soon as you drop it.
-      </p>
-
-      <Suspense fallback={<p className="text-sm text-subtle">Loading…</p>}>
+      <Suspense fallback={<ListSkeleton />}>
         <WorkList />
       </Suspense>
     </div>

@@ -6,6 +6,7 @@ import { Reorder, useDragControls } from "framer-motion";
 import { deleteAsset, makeCover, saveAltText } from "@/lib/asset-actions";
 import { saveAssetOrder } from "@/lib/admin-actions";
 import DragHandle from "./DragHandle";
+import { button, field, label as labelClass } from "./ui";
 
 /**
  * Drag-to-reorder for one work's images. Same contract as
@@ -25,6 +26,7 @@ function AssetCard({
   asset,
   workId,
   isCover,
+  isVideo,
   index,
   total,
   onMove,
@@ -33,11 +35,14 @@ function AssetCard({
   asset: AdminAsset;
   workId: string;
   isCover: boolean;
+  isVideo: boolean;
   index: number;
   total: number;
   onMove: (from: number, to: number) => void;
   onCommit: () => void;
 }) {
+  // "Cover" is gallery language; for a film the same image is its thumbnail.
+  const coverWord = isVideo ? "Thumbnail" : "Cover";
   const controls = useDragControls();
 
   return (
@@ -84,8 +89,8 @@ function AssetCard({
           className="object-cover"
         />
         {isCover && (
-          <span className="absolute left-2 top-2 rounded bg-black/60 px-2 py-1 text-[10px] uppercase tracking-widest text-white">
-            Cover
+          <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-1 text-[10px] uppercase tracking-widest text-white">
+            {coverWord}
           </span>
         )}
       </div>
@@ -94,19 +99,19 @@ function AssetCard({
         <input type="hidden" name="workId" value={workId} />
         <input type="hidden" name="assetId" value={asset.id} />
         <label className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-widest text-subtle">
-            Description (read aloud by screen readers)
-          </span>
+          <span className={labelClass}>Description</span>
           <input
             name="alt"
             defaultValue={asset.alt}
-            className="rounded border border-border bg-card px-2 py-1 text-sm"
+            placeholder="What is in this image?"
+            className={`${field} text-sm`}
           />
+          <span className="text-[11px] text-subtle">
+            Read aloud to visitors using a screen reader, and shown if the image
+            fails to load.
+          </span>
         </label>
-        <button
-          type="submit"
-          className="self-start text-[10px] uppercase tracking-widest text-subtle hover:opacity-60"
-        >
+        <button type="submit" className={`${button.quiet} self-start`}>
           Save description
         </button>
       </form>
@@ -121,11 +126,8 @@ function AssetCard({
             <form action={makeCover}>
               <input type="hidden" name="workId" value={workId} />
               <input type="hidden" name="assetId" value={asset.id} />
-              <button
-                type="submit"
-                className="text-[10px] uppercase tracking-widest text-subtle hover:opacity-60"
-              >
-                Make cover
+              <button type="submit" className={button.quiet}>
+                Use as {coverWord.toLowerCase()}
               </button>
             </form>
           )}
@@ -135,7 +137,7 @@ function AssetCard({
             <input type="hidden" name="assetId" value={asset.id} />
             <button
               type="submit"
-              className="text-[10px] uppercase tracking-widest text-accent hover:opacity-60"
+              className={`${button.quiet} text-accent`}
             >
               Remove
             </button>
@@ -149,10 +151,12 @@ function AssetCard({
 export default function ReorderableAssets({
   workId,
   coverAssetId,
+  isVideo,
   assets,
 }: {
   workId: string;
   coverAssetId: string | null;
+  isVideo: boolean;
   assets: AdminAsset[];
 }) {
   const [order, setOrder] = useState(() => assets.map((asset) => asset.id));
@@ -207,6 +211,7 @@ export default function ReorderableAssets({
               asset={asset}
               workId={workId}
               isCover={coverAssetId === id}
+              isVideo={isVideo}
               index={index}
               total={order.length}
               onMove={move}

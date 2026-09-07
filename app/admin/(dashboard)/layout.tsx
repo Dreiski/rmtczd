@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/dal";
 import { logout } from "@/lib/auth/actions";
+import AdminNav, { AdminNavFallback } from "@/components/admin/AdminNav";
+import { button } from "@/components/admin/ui";
 
 /**
  * Admin shell.
@@ -21,17 +23,14 @@ async function AccountBar() {
   const user = await requireUser();
 
   return (
-    <>
-      <span className="text-xs text-subtle">{user.email}</span>
+    <div className="flex items-center gap-4">
+      <span className="hidden text-xs text-subtle sm:inline">{user.email}</span>
       <form action={logout}>
-        <button
-          type="submit"
-          className="text-xs uppercase tracking-widest text-subtle hover:opacity-60"
-        >
+        <button type="submit" className={button.quiet}>
           Sign out
         </button>
       </form>
-    </>
+    </div>
   );
 }
 
@@ -42,25 +41,39 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
-        <Link href="/admin" className="text-lg tracking-wide">
-          Admin
-        </Link>
+      <header className="sticky top-0 z-20 border-b border-border bg-bg-chrome">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex items-center justify-between gap-4 sm:justify-start sm:gap-6">
+            <Link
+              href="/admin"
+              className="text-sm font-medium uppercase tracking-[0.2em]"
+            >
+              Romanticized
+            </Link>
+            <Suspense fallback={<AdminNavFallback />}>
+              <AdminNav />
+            </Suspense>
+          </div>
 
-        <div className="flex items-center gap-5">
-          <Link
-            href="/"
-            className="text-xs uppercase tracking-widest text-subtle hover:opacity-60"
-          >
-            View site
-          </Link>
-          <Suspense fallback={null}>
-            <AccountBar />
-          </Suspense>
+          <div className="flex items-center justify-between gap-4 sm:justify-end">
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={button.quiet}
+            >
+              View site ↗
+            </Link>
+            <Suspense fallback={null}>
+              <AccountBar />
+            </Suspense>
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 px-6 py-10">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        {children}
+      </main>
     </div>
   );
 }
